@@ -22,19 +22,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      
       - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
+        run: uv python install
       
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          uv sync
       
       - name: Generate gallery
         run: |
-          python generate_gallery.py
+          uv run python generate_gallery.py
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
