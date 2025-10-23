@@ -14,19 +14,34 @@ A performance-testing website featuring 500 interactive Altair plots across 10 p
 
 ### Prerequisites
 
-- Python 3.11+
-- pip
+- Python 3.12+
+- [uv](https://github.com/astral-sh/uv) (fast Python package manager)
 
 ### Installation
 
+Install uv if you haven't already:
+
 ```bash
-pip install -r requirements.txt
+# On macOS and Linux:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows:
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Or via pip:
+pip install uv
+```
+
+Install dependencies:
+
+```bash
+uv sync
 ```
 
 ### Generate the Gallery
 
 ```bash
-python generate_gallery.py
+uv run python generate_gallery.py
 ```
 
 This will create all HTML files in the `docs/` directory.
@@ -49,7 +64,8 @@ python -m http.server 8000 --directory docs
 ```
 .
 ├── generate_gallery.py   # Main script to generate the gallery
-├── requirements.txt      # Python dependencies
+├── pyproject.toml        # Project configuration and dependencies
+├── uv.lock              # Lock file for reproducible installs
 ├── docs/                 # Generated HTML files (served by GitHub Pages)
 │   ├── index.html       # Landing page with navigation
 │   ├── page1.html       # Page 1 with 50 plots
@@ -82,15 +98,16 @@ The gallery is optimized for load time:
 
 The site automatically deploys to GitHub Pages via GitHub Actions when changes are pushed to the main branch. The workflow:
 
-1. Installs Python dependencies
-2. Runs `generate_gallery.py` to create HTML files
-3. Deploys the `docs/` directory to GitHub Pages
+1. Installs uv and Python
+2. Installs dependencies with `uv sync`
+3. Runs `generate_gallery.py` to create HTML files
+4. Deploys the `docs/` directory to GitHub Pages
 
 ## Testing
 
 To test the gallery:
 
-1. Generate the files: `python generate_gallery.py`
+1. Generate the files: `uv run python generate_gallery.py`
 2. Verify all 11 HTML files are created in `docs/`
 3. Open `docs/index.html` in a browser
 4. Navigate through pages and test interactivity (zoom, pan, tooltips)
