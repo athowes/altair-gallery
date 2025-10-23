@@ -1,6 +1,6 @@
 """
 Generate a performance-testing Altair gallery website.
-Creates configurable HTML pages with interactive plots (default: 10 pages with 50 plots each).
+Creates configurable HTML pages with interactive plots (default: 50 pages with 300 plots each).
 """
 
 import os
@@ -55,7 +55,7 @@ def create_random_scatter_plot(plot_id, num_points=100):
     return chart
 
 
-def generate_page_html(page_num, num_plots=50, num_pages=10):
+def generate_page_html(page_num, num_plots=300, num_pages=50):
     """
     Generate HTML content for a single page with multiple plots.
     
@@ -206,7 +206,7 @@ def generate_page_html(page_num, num_plots=50, num_pages=10):
     return html_template
 
 
-def generate_index_html(num_pages=10, plots_per_page=50):
+def generate_index_html(num_pages=50, plots_per_page=300):
     """
     Generate the index/home page with navigation.
     
@@ -368,7 +368,7 @@ def generate_index_html(num_pages=10, plots_per_page=50):
     return html
 
 
-def main(num_pages=10, plots_per_page=50):
+def main(num_pages=50, plots_per_page=300):
     """
     Main function to generate all HTML pages.
     
@@ -418,13 +418,13 @@ if __name__ == "__main__":
     parser.add_argument(
         '--num-pages',
         type=int,
-        default=10,
+        default=50,
         help='Number of gallery pages to generate'
     )
     parser.add_argument(
         '--plots-per-page',
         type=int,
-        default=50,
+        default=300,
         help='Number of plots per page'
     )
     
