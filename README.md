@@ -1,15 +1,13 @@
 # Altair Gallery
 
-A performance-testing website featuring interactive Altair plots organized by US state. Built to test the performance and load times of a large Altair visualization gallery deployed via GitHub Pages.
+A performance-testing website featuring interactive Altair plots organized by US state, deployed via GitHub Pages.
 
 ## Features
 
-- 🗺️ **State-Based Gallery**: One page per US state (50 states total)
-- 📊 **15,000 Interactive Plots**: 300 plots per state with zoom, pan, and tooltips
-- 🚀 **Performance Optimized**: Uses Vega-Lite JSON specs for efficient rendering
-- 🔍 **Interactive**: Zoom, pan, and tooltips on all visualizations
-- 🌐 **GitHub Pages**: Automatically deployed via GitHub Actions
-- ⚙️ **Flexible Configuration**: YAML-based configuration for customizing chart types and plot counts per state
+- 🗺️ **State-Based Gallery**: 50 US states, each with 300 interactive plots (15,000 total)
+- 🚀 **Performance Optimized**: Vega-Lite JSON specs with client-side rendering
+- ⚙️ **Flexible Configuration**: YAML-based configuration for chart types and plot counts
+- 🌐 **Auto-Deployed**: GitHub Actions deployment to GitHub Pages
 
 ## Quick Start
 
@@ -42,113 +40,65 @@ uv sync
 ### Generate the Gallery
 
 ```bash
-uv run python generate_gallery.py
-```
-
-This will create all HTML files in the `docs/` directory using the default configuration from `layout_config.yaml` (50 state pages with 300 plots each).
-
-#### Customization Options
-
-You can customize the gallery by modifying `layout_config.yaml` or by specifying a different configuration file:
-
-```bash
-# Use default configuration
+# Generate with default configuration
 uv run python generate_gallery.py
 
-# Use a custom configuration file
+# Use custom configuration file
 uv run python generate_gallery.py --config my_config.yaml
-
-# View available options
-uv run python generate_gallery.py --help
 ```
 
-The YAML configuration file allows you to:
-- Set default chart type (scatter_plot or bar_chart) for all states
-- Set default number of plots per state
-- Override chart types for specific states (e.g., CA, TX, NY use bar charts in the default config)
+Configure via `layout_config.yaml` to set default chart types, plot counts, and state-specific overrides:
 
-Example `layout_config.yaml`:
 ```yaml
 defaults:
-  chart_type: "scatter_plot"
+  chart_type: "scatter_plot"  # or "bar_chart"
   num_plots: 300
 
 overrides:
   CA:
-    chart_type: "bar_chart"
-  TX:
-    chart_type: "bar_chart"
+    chart_type: "bar_chart"  # Override for specific states
 ```
 
 ### Local Preview
 
-You can preview the gallery locally by opening the files in a web browser:
-
 ```bash
-# Open index page in your default browser (macOS)
-open docs/index.html
-
-# Or use Python's built-in HTTP server
+# Using Python HTTP server
 python -m http.server 8000 --directory docs
-# Then visit http://localhost:8000
+# Visit http://localhost:8000
+
+# Or open directly (macOS)
+open docs/index.html
 ```
 
 ## Project Structure
 
 ```
 .
-├── generate_gallery.py   # Main script to generate the gallery
-├── layout_config.yaml    # YAML configuration for chart types and plot counts
-├── pyproject.toml        # Project configuration and dependencies
-├── uv.lock              # Lock file for reproducible installs
-├── docs/                 # Generated HTML files (served by GitHub Pages)
-│   ├── index.html       # Landing page with navigation to all states
-│   ├── AL.html          # Alabama page with 300 plots
-│   ├── AK.html          # Alaska page with 300 plots
-│   ├── CA.html          # California page with 300 bar charts
-│   └── ...              # Pages for all 50 US states
-└── .github/
-    └── workflows/
-        └── deploy.yml   # GitHub Actions workflow for deployment
+├── generate_gallery.py   # Main script
+├── layout_config.yaml    # Configuration file
+├── pyproject.toml        # Dependencies
+├── docs/                 # Generated HTML (51 files: index + 50 states)
+└── .github/workflows/    # GitHub Actions deployment
 ```
 
 ## How It Works
 
-1. **State-Based Organization**: Creates one page per US state (50 total)
-2. **Random Data Generation**: Each plot generates random data with reproducible seeds based on state and plot ID
-3. **Altair Visualization**: Creates interactive scatter plots or bar charts using Altair based on YAML configuration
-4. **Vega-Lite Specs**: Plots are embedded as JSON specifications for efficiency
-5. **Client-Side Rendering**: Vega-Embed renders plots in the browser
-6. **GitHub Pages**: Automatically deployed on push to main branch
-
-## Performance Considerations
-
-The gallery is optimized for load time:
-
-- Static HTML files with embedded JSON specs (no server-side rendering needed)
-- Vega-Lite specifications are compact and efficient
-- CSS Grid layout for responsive design
-- CDN-hosted Vega libraries for fast loading
-- Minimal JavaScript - only what's needed for rendering
+The script generates one HTML page per US state (50 total) with 300 plots each. Each plot uses reproducible random data and is rendered client-side via Vega-Embed. Static HTML files with embedded Vega-Lite JSON specs ensure fast loading and efficient rendering.
 
 ## Deployment
 
-The site automatically deploys to GitHub Pages via GitHub Actions when changes are pushed to the main branch. The workflow:
-
-1. Installs uv and Python
-2. Installs dependencies with `uv sync`
-3. Runs `generate_gallery.py` to create HTML files
-4. Deploys the `docs/` directory to GitHub Pages
+Automatically deploys to GitHub Pages via GitHub Actions on push to main:
+1. Installs dependencies with `uv sync`
+2. Generates HTML files with `generate_gallery.py`
+3. Deploys `docs/` directory
 
 ## Testing
 
-To test the gallery:
-
-1. Generate the files: `uv run python generate_gallery.py`
-2. Verify all 51 HTML files are created in `docs/` (1 index + 50 state pages)
-3. Open `docs/index.html` in a browser
-4. Navigate through state pages and test interactivity (zoom, pan, tooltips)
-5. Verify that CA, TX, and NY show bar charts while other states show scatter plots (with default config)
+```bash
+uv run python generate_gallery.py
+# Verify 51 HTML files in docs/ (index + 50 states)
+# Open docs/index.html and test interactivity
+```
 
 ## License
 
