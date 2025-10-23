@@ -270,7 +270,7 @@ def generate_page_html(state, layout_config, all_states):
     
     # Add navigation to all states
     for nav_state in all_states:
-        html_template += f'                <a href="{nav_state.lower()}.html">{nav_state}</a>\n'
+        html_template += f'                <a href="{nav_state}.html">{nav_state}</a>\n'
     
     html_template += """
             </div>
