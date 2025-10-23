@@ -24,3 +24,6 @@ Thumbs.db
 
 # Temporary files
 tmp/
+
+# Generated docs (created by generate_gallery.py, deployed via GitHub Actions)
+docs/
