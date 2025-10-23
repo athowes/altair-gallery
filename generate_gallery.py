@@ -1,10 +1,11 @@
 """
 Generate a performance-testing Altair gallery website.
-Creates 10 HTML pages with 50 interactive plots each.
+Creates configurable HTML pages with interactive plots (default: 10 pages with 50 plots each).
 """
 
 import os
 import json
+import argparse
 import altair as alt
 import pandas as pd
 import numpy as np
@@ -46,13 +47,14 @@ def create_random_scatter_plot(plot_id, num_points=100):
     return chart
 
 
-def generate_page_html(page_num, num_plots=50):
+def generate_page_html(page_num, num_plots=50, num_pages=10):
     """
     Generate HTML content for a single page with multiple plots.
     
     Args:
         page_num: Page number (1-indexed)
         num_plots: Number of plots per page
+        num_pages: Total number of pages for navigation
         
     Returns:
         HTML string
@@ -137,7 +139,7 @@ def generate_page_html(page_num, num_plots=50):
         <h1>Altair Gallery - Page {page_num}</h1>
         <div class="nav">
             <a href="index.html">Home</a>
-            {''.join([f'<a href="page{i}.html">Page {i}</a>' for i in range(1, 11)])}
+            {''.join([f'<a href="page{i}.html">Page {i}</a>' for i in range(1, num_pages + 1)])}
         </div>
     </div>
     
@@ -180,21 +182,26 @@ def generate_page_html(page_num, num_plots=50):
     return html_template
 
 
-def generate_index_html():
+def generate_index_html(num_pages=10, plots_per_page=50):
     """
     Generate the index/home page with navigation.
+    
+    Args:
+        num_pages: Total number of gallery pages
+        plots_per_page: Number of plots per page
     
     Returns:
         HTML string
     """
-    html = """<!DOCTYPE html>
+    total_plots = num_pages * plots_per_page
+    html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Altair Gallery - Home</title>
     <style>
-        body {
+        body {{
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -203,51 +210,51 @@ def generate_index_html():
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .container {
+        }}
+        .container {{
             background-color: white;
             padding: 50px;
             border-radius: 10px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             max-width: 800px;
             text-align: center;
-        }
-        h1 {
+        }}
+        h1 {{
             color: #2c3e50;
             margin-bottom: 20px;
-        }
-        .description {
+        }}
+        .description {{
             color: #666;
             margin-bottom: 40px;
             line-height: 1.6;
-        }
-        .stats {
+        }}
+        .stats {{
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-bottom: 40px;
-        }
-        .stat-box {
+        }}
+        .stat-box {{
             background-color: #f8f9fa;
             padding: 20px;
             border-radius: 8px;
-        }
-        .stat-number {
+        }}
+        .stat-number {{
             font-size: 2em;
             font-weight: bold;
             color: #667eea;
-        }
-        .stat-label {
+        }}
+        .stat-label {{
             color: #666;
             margin-top: 5px;
-        }
-        .page-grid {
+        }}
+        .page-grid {{
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 15px;
             margin-top: 30px;
-        }
-        .page-link {
+        }}
+        .page-link {{
             display: block;
             padding: 20px;
             background-color: #667eea;
@@ -256,19 +263,19 @@ def generate_index_html():
             border-radius: 8px;
             font-weight: bold;
             transition: all 0.3s;
-        }
-        .page-link:hover {
+        }}
+        .page-link:hover {{
             background-color: #764ba2;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .footer {
+        }}
+        .footer {{
             margin-top: 40px;
             padding-top: 20px;
             border-top: 1px solid #ddd;
             color: #999;
             font-size: 0.9em;
-        }
+        }}
     </style>
 </head>
 <body>
@@ -276,20 +283,20 @@ def generate_index_html():
         <h1>🎨 Altair Gallery</h1>
         <div class="description">
             <p>A performance testing gallery showcasing interactive Altair plots.</p>
-            <p>Each page contains 50 randomly generated scatter plots with interactive features including zoom, pan, and tooltips.</p>
+            <p>Each page contains {plots_per_page} randomly generated scatter plots with interactive features including zoom, pan, and tooltips.</p>
         </div>
         
         <div class="stats">
             <div class="stat-box">
-                <div class="stat-number">10</div>
+                <div class="stat-number">{num_pages}</div>
                 <div class="stat-label">Pages</div>
             </div>
             <div class="stat-box">
-                <div class="stat-number">50</div>
+                <div class="stat-number">{plots_per_page}</div>
                 <div class="stat-label">Plots per Page</div>
             </div>
             <div class="stat-box">
-                <div class="stat-number">500</div>
+                <div class="stat-number">{total_plots}</div>
                 <div class="stat-label">Total Plots</div>
             </div>
         </div>
@@ -299,7 +306,7 @@ def generate_index_html():
 """
     
     # Add links to all pages
-    for i in range(1, 11):
+    for i in range(1, num_pages + 1):
         html += f'            <a href="page{i}.html" class="page-link">Page {i}</a>\n'
     
     html += """        </div>
@@ -315,9 +322,13 @@ def generate_index_html():
     return html
 
 
-def main():
+def main(num_pages=10, plots_per_page=50):
     """
     Main function to generate all HTML pages.
+    
+    Args:
+        num_pages: Number of gallery pages to generate (default: 10)
+        plots_per_page: Number of plots per page (default: 50)
     """
     # Create output directory if it doesn't exist
     output_dir = 'docs'
@@ -325,30 +336,58 @@ def main():
     
     print("Generating Altair Gallery website...")
     print(f"Output directory: {output_dir}")
+    print(f"Pages: {num_pages}")
+    print(f"Plots per page: {plots_per_page}")
     
     # Generate index page
     print("\nGenerating index page...")
-    index_html = generate_index_html()
+    index_html = generate_index_html(num_pages, plots_per_page)
     with open(os.path.join(output_dir, 'index.html'), 'w') as f:
         f.write(index_html)
     print("✓ index.html created")
     
     # Generate individual pages
-    for page_num in range(1, 11):
+    for page_num in range(1, num_pages + 1):
         print(f"\nGenerating page {page_num}...")
-        page_html = generate_page_html(page_num, num_plots=50)
+        page_html = generate_page_html(page_num, plots_per_page, num_pages)
         filename = os.path.join(output_dir, f'page{page_num}.html')
         with open(filename, 'w') as f:
             f.write(page_html)
-        print(f"✓ page{page_num}.html created with 50 plots")
+        print(f"✓ page{page_num}.html created with {plots_per_page} plots")
     
+    total_plots = num_pages * plots_per_page
     print("\n" + "="*50)
     print("Gallery generation complete!")
-    print(f"Total pages created: 11 (1 index + 10 gallery pages)")
-    print(f"Total plots created: 500")
+    print(f"Total pages created: {num_pages + 1} (1 index + {num_pages} gallery pages)")
+    print(f"Total plots created: {total_plots}")
     print(f"Files are in the '{output_dir}/' directory")
     print("="*50)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description='Generate a performance-testing Altair gallery website.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        '--num-pages',
+        type=int,
+        default=10,
+        help='Number of gallery pages to generate'
+    )
+    parser.add_argument(
+        '--plots-per-page',
+        type=int,
+        default=50,
+        help='Number of plots per page'
+    )
+    
+    args = parser.parse_args()
+    
+    # Validate arguments
+    if args.num_pages < 1:
+        parser.error("--num-pages must be at least 1")
+    if args.plots_per_page < 1:
+        parser.error("--plots-per-page must be at least 1")
+    
+    main(args.num_pages, args.plots_per_page)

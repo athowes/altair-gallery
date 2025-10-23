@@ -1,14 +1,15 @@
 # Altair Gallery
 
-A performance-testing website featuring 500 interactive Altair plots across 10 pages. Built to test the performance and load times of a large Altair visualization gallery deployed via GitHub Pages.
+A performance-testing website featuring interactive Altair plots. Built to test the performance and load times of a large Altair visualization gallery deployed via GitHub Pages.
 
 ## Features
 
-- 🎨 **10 Pages**: Each containing 50 interactive plots
-- 📊 **500 Total Plots**: Randomly generated scatter plots with interactive features
+- 🎨 **Customizable Pages**: Configure the number of pages (default: 10)
+- 📊 **Customizable Plots**: Set plots per page (default: 50, total: 500)
 - 🚀 **Performance Optimized**: Uses Vega-Lite JSON specs for efficient rendering
 - 🔍 **Interactive**: Zoom, pan, and tooltips on all visualizations
 - 🌐 **GitHub Pages**: Automatically deployed via GitHub Actions
+- ⚙️ **Flexible Configuration**: Command-line parameters for easy customization
 
 ## Quick Start
 
@@ -44,7 +45,26 @@ uv sync
 uv run python generate_gallery.py
 ```
 
-This will create all HTML files in the `docs/` directory.
+This will create all HTML files in the `docs/` directory with the default settings (10 pages, 50 plots per page).
+
+#### Customization Options
+
+You can customize the number of pages and plots per page using command-line arguments:
+
+```bash
+# Generate 5 pages with 25 plots each
+uv run python generate_gallery.py --num-pages 5 --plots-per-page 25
+
+# Generate 3 pages with 10 plots each
+uv run python generate_gallery.py --num-pages 3 --plots-per-page 10
+
+# View available options
+uv run python generate_gallery.py --help
+```
+
+Parameters:
+- `--num-pages`: Number of gallery pages to generate (default: 10)
+- `--plots-per-page`: Number of plots per page (default: 50)
 
 ### Local Preview
 
