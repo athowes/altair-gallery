@@ -1,6 +1,6 @@
 """
 Generate a performance-testing Altair gallery website.
-Creates configurable HTML pages with interactive plots (default: 10 pages with 50 plots each).
+Creates configurable HTML pages with interactive plots (default: 50 pages with 300 plots each).
 """
 
 import os
