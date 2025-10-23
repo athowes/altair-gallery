@@ -32,16 +32,24 @@ def create_random_scatter_plot(plot_id, num_points=100):
         'category': np.random.choice(['A', 'B', 'C', 'D'], num_points)
     })
     
-    # Create interactive scatter plot
+    # Create interactive scatter plot with neutral theme
     chart = alt.Chart(data).mark_circle(size=60).encode(
         x=alt.X('x:Q', scale=alt.Scale(domain=[-4, 4])),
         y=alt.Y('y:Q', scale=alt.Scale(domain=[-4, 4])),
-        color=alt.Color('category:N', legend=alt.Legend(title='Category')),
+        color=alt.Color('category:N', 
+                       scale=alt.Scale(range=['#6c757d', '#868e96', '#adb5bd', '#ced4da']),
+                       legend=alt.Legend(title='Category')),
         tooltip=['x:Q', 'y:Q', 'category:N']
     ).properties(
         width=300,
         height=300,
         title=f'Plot {plot_id}'
+    ).configure_axis(
+        gridColor='#e9ecef',
+        gridOpacity=0.5,
+        gridWidth=0.5
+    ).configure_view(
+        strokeWidth=0
     ).interactive()
     
     return chart
@@ -84,76 +92,92 @@ def generate_page_html(page_num, num_plots=50, num_pages=10):
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
     <style>
+        * {{
+            box-sizing: border-box;
+        }}
         body {{
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 0;
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.6;
+        }}
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
         }}
         .header {{
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px;
-            margin: -20px -20px 20px -20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 30px;
+            margin-bottom: 40px;
         }}
         .header h1 {{
-            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #212529;
+            margin: 0 0 20px 0;
+            letter-spacing: -0.5px;
         }}
         .nav {{
-            margin: 10px 0;
+            margin: 20px 0 0 0;
         }}
         .nav a {{
-            color: #3498db;
+            color: #6c757d;
             text-decoration: none;
-            margin-right: 15px;
-            padding: 5px 10px;
-            background-color: white;
-            border-radius: 3px;
+            margin-right: 20px;
+            padding: 8px 16px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            transition: color 0.2s;
         }}
         .nav a:hover {{
-            background-color: #e8e8e8;
+            color: #212529;
         }}
         .gallery {{
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            gap: 30px;
+            margin-top: 30px;
         }}
         .plot-container {{
-            background-color: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+            padding: 20px;
+            border: 1px solid #e9ecef;
         }}
         .footer {{
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
             text-align: center;
-            color: #666;
+            color: #6c757d;
+            font-size: 0.875rem;
         }}
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Altair Gallery - Page {page_num}</h1>
-        <div class="nav">
-            <a href="index.html">Home</a>
-            {''.join([f'<a href="page{i}.html">Page {i}</a>' for i in range(1, num_pages + 1)])}
+    <div class="container">
+        <div class="header">
+            <h1>Altair Gallery - Page {page_num}</h1>
+            <div class="nav">
+                <a href="index.html">Home</a>
+                {''.join([f'<a href="page{i}.html">Page {i}</a>' for i in range(1, num_pages + 1)])}
+            </div>
         </div>
-    </div>
-    
-    <div class="gallery">
+        
+        <div class="gallery">
 """
     
     # Add plot containers
     for chart_info in chart_specs:
         html_template += f'        <div class="plot-container" id="{chart_info["id"]}"></div>\n'
     
-    html_template += """    </div>
-    
-    <div class="footer">
-        <p>Performance testing gallery with Altair plots</p>
+    html_template += """        </div>
+        
+        <div class="footer">
+            <p>Performance testing gallery with Altair plots</p>
+        </div>
     </div>
     
     <script type="text/javascript">
@@ -201,86 +225,108 @@ def generate_index_html(num_pages=10, plots_per_page=50):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Altair Gallery - Home</title>
     <style>
+        * {{
+            box-sizing: border-box;
+        }}
         body {{
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: #ffffff;
+            color: #333333;
+            line-height: 1.6;
         }}
         .container {{
-            background-color: white;
-            padding: 50px;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            max-width: 800px;
-            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
         }}
         h1 {{
-            color: #2c3e50;
-            margin-bottom: 20px;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #212529;
+            margin: 0 0 30px 0;
+            text-align: center;
+            letter-spacing: -0.5px;
         }}
         .description {{
-            color: #666;
-            margin-bottom: 40px;
-            line-height: 1.6;
+            color: #6c757d;
+            margin-bottom: 50px;
+            text-align: center;
+            font-size: 1.0625rem;
+        }}
+        .description p {{
+            margin: 10px 0;
         }}
         .stats {{
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 40px;
+            gap: 30px;
+            margin-bottom: 60px;
+            padding-bottom: 50px;
+            border-bottom: 1px solid #e0e0e0;
         }}
         .stat-box {{
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
+            text-align: center;
+            padding: 30px 20px;
+            border: 1px solid #e9ecef;
         }}
         .stat-number {{
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #495057;
+            line-height: 1;
         }}
         .stat-label {{
-            color: #666;
-            margin-top: 5px;
+            color: #6c757d;
+            margin-top: 10px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }}
+        h2 {{
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #212529;
+            margin: 0 0 30px 0;
+            text-align: center;
+            letter-spacing: -0.25px;
         }}
         .page-grid {{
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
             margin-top: 30px;
         }}
         .page-link {{
             display: block;
-            padding: 20px;
-            background-color: #667eea;
-            color: white;
+            padding: 24px;
+            background-color: #ffffff;
+            color: #495057;
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: all 0.3s;
+            border: 1px solid #dee2e6;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
         }}
         .page-link:hover {{
-            background-color: #764ba2;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            background-color: #f8f9fa;
+            border-color: #adb5bd;
+            color: #212529;
         }}
         .footer {{
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            color: #999;
-            font-size: 0.9em;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.875rem;
         }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎨 Altair Gallery</h1>
+        <h1>Altair Gallery</h1>
         <div class="description">
             <p>A performance testing gallery showcasing interactive Altair plots.</p>
             <p>Each page contains {plots_per_page} randomly generated scatter plots with interactive features including zoom, pan, and tooltips.</p>
