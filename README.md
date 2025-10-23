@@ -1,15 +1,13 @@
 # Altair Gallery
 
-A performance-testing website featuring interactive Altair plots. Built to test the performance and load times of a large Altair visualization gallery deployed via GitHub Pages.
+A performance-testing website featuring interactive Altair plots organized by US state, deployed via GitHub Pages.
 
 ## Features
 
-- 🎨 **Customizable Pages**: Configure the number of pages (default: 50)
-- 📊 **Customizable Plots**: Set plots per page (default: 300, total: 15,000)
-- 🚀 **Performance Optimized**: Uses Vega-Lite JSON specs for efficient rendering
-- 🔍 **Interactive**: Zoom, pan, and tooltips on all visualizations
-- 🌐 **GitHub Pages**: Automatically deployed via GitHub Actions
-- ⚙️ **Flexible Configuration**: Command-line parameters for easy customization
+- 🗺️ **State-Based Gallery**: 50 US states, each with 300 interactive plots (15,000 total)
+- 🚀 **Performance Optimized**: Vega-Lite JSON specs with client-side rendering
+- ⚙️ **Flexible Configuration**: YAML-based configuration for chart types and plot counts
+- 🌐 **Auto-Deployed**: GitHub Actions deployment to GitHub Pages
 
 ## Quick Start
 
@@ -42,95 +40,65 @@ uv sync
 ### Generate the Gallery
 
 ```bash
+# Generate with default configuration
 uv run python generate_gallery.py
+
+# Use custom configuration file
+uv run python generate_gallery.py --config my_config.yaml
 ```
 
-This will create all HTML files in the `docs/` directory with the default settings (50 pages, 300 plots per page).
+Configure via `layout_config.yaml` to set default chart types, plot counts, and state-specific overrides:
 
-#### Customization Options
+```yaml
+defaults:
+  chart_type: "scatter_plot"  # or "bar_chart"
+  num_plots: 300
 
-You can customize the number of pages and plots per page using command-line arguments:
-
-```bash
-# Generate 5 pages with 25 plots each
-uv run python generate_gallery.py --num-pages 5 --plots-per-page 25
-
-# Generate 3 pages with 10 plots each
-uv run python generate_gallery.py --num-pages 3 --plots-per-page 10
-
-# View available options
-uv run python generate_gallery.py --help
+overrides:
+  CA:
+    chart_type: "bar_chart"  # Override for specific states
 ```
-
-Parameters:
-- `--num-pages`: Number of gallery pages to generate (default: 50)
-- `--plots-per-page`: Number of plots per page (default: 300)
 
 ### Local Preview
 
-You can preview the gallery locally by opening the files in a web browser:
-
 ```bash
-# Open index page in your default browser (macOS)
-open docs/index.html
-
-# Or use Python's built-in HTTP server
+# Using Python HTTP server
 python -m http.server 8000 --directory docs
-# Then visit http://localhost:8000
+# Visit http://localhost:8000
+
+# Or open directly (macOS)
+open docs/index.html
 ```
 
 ## Project Structure
 
 ```
 .
-├── generate_gallery.py   # Main script to generate the gallery
-├── pyproject.toml        # Project configuration and dependencies
-├── uv.lock              # Lock file for reproducible installs
-├── docs/                 # Generated HTML files (served by GitHub Pages)
-│   ├── index.html       # Landing page with navigation
-│   ├── page1.html       # Page 1 with 300 plots
-│   ├── page2.html       # Page 2 with 300 plots
-│   └── ...              # Pages 3-50
-└── .github/
-    └── workflows/
-        └── deploy.yml   # GitHub Actions workflow for deployment
+├── generate_gallery.py   # Main script
+├── layout_config.yaml    # Configuration file
+├── pyproject.toml        # Dependencies
+├── docs/                 # Generated HTML (51 files: index + 50 states)
+└── .github/workflows/    # GitHub Actions deployment
 ```
 
 ## How It Works
 
-1. **Random Data Generation**: Each plot generates 100 random points with 4 categories
-2. **Altair Visualization**: Creates interactive scatter plots using Altair
-3. **Vega-Lite Specs**: Plots are embedded as JSON specifications for efficiency
-4. **Client-Side Rendering**: Vega-Embed renders plots in the browser
-5. **GitHub Pages**: Automatically deployed on push to main branch
-
-## Performance Considerations
-
-The gallery is optimized for load time:
-
-- Static HTML files with embedded JSON specs (no server-side rendering needed)
-- Vega-Lite specifications are compact and efficient
-- CSS Grid layout for responsive design
-- CDN-hosted Vega libraries for fast loading
-- Minimal JavaScript - only what's needed for rendering
+The script generates one HTML page per US state (50 total) with 300 plots each. Each plot uses reproducible random data and is rendered client-side via Vega-Embed. Static HTML files with embedded Vega-Lite JSON specs ensure fast loading and efficient rendering.
 
 ## Deployment
 
-The site automatically deploys to GitHub Pages via GitHub Actions when changes are pushed to the main branch. The workflow:
-
-1. Installs uv and Python
-2. Installs dependencies with `uv sync`
-3. Runs `generate_gallery.py` to create HTML files
-4. Deploys the `docs/` directory to GitHub Pages
+Automatically deploys to GitHub Pages via GitHub Actions on push to main:
+1. Installs dependencies with `uv sync`
+2. Generates HTML files with `generate_gallery.py`
+3. Deploys `docs/` directory
 
 ## Testing
 
-To test the gallery:
-
-1. Generate the files: `uv run python generate_gallery.py`
-2. Verify all 51 HTML files are created in `docs/`
-3. Open `docs/index.html` in a browser
-4. Navigate through pages and test interactivity (zoom, pan, tooltips)
+```bash
+uv run python generate_gallery.py
+# Verify 51 HTML files in docs/ (index + 50 states)
+# Open docs/index.html and test interactivity
+```
 
 ## License
 
