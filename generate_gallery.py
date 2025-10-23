@@ -6,9 +6,61 @@ Creates configurable HTML pages with interactive plots (default: 50 pages with 3
 import os
 import json
 import argparse
+import yaml
 import altair as alt
 import pandas as pd
 import numpy as np
+
+
+# US States data
+US_STATES = [
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+]
+
+STATE_NAMES = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+}
+
+
+def load_layout_config(config_path='layout_config.yaml'):
+    """Load the YAML layout configuration."""
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+
+
+def resolve_layout(manifest, state):
+    """
+    Resolve the final layout configuration for a given state.
+    
+    Args:
+        manifest: Loaded YAML configuration
+        state: Two-letter state code
+        
+    Returns:
+        Resolved layout configuration dictionary
+    """
+    # Start with defaults
+    config = {**manifest["defaults"]}
+    
+    # Apply overrides if they exist for this state
+    if state in manifest.get("overrides", {}):
+        override = manifest["overrides"][state]
+        config.update(override)
+    
+    return config
 
 
 def create_random_scatter_plot(plot_id, num_points=100):
@@ -55,25 +107,77 @@ def create_random_scatter_plot(plot_id, num_points=100):
     return chart
 
 
-def generate_page_html(page_num, num_plots=300, num_pages=50):
+def create_random_bar_chart(plot_id):
     """
-    Generate HTML content for a single page with multiple plots.
+    Create an Altair bar chart with random data.
     
     Args:
-        page_num: Page number (1-indexed)
-        num_plots: Number of plots per page
-        num_pages: Total number of pages for navigation
+        plot_id: Unique identifier for the plot
+        
+    Returns:
+        Altair Chart object
+    """
+    # Set seed for reproducibility based on plot_id
+    np.random.seed(plot_id)
+    
+    # Generate random data
+    categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
+    data = pd.DataFrame({
+        'category': categories,
+        'value': np.random.randint(10, 100, len(categories))
+    })
+    
+    # Create bar chart with neutral theme
+    chart = alt.Chart(data).mark_bar().encode(
+        x=alt.X('category:N', title='Category'),
+        y=alt.Y('value:Q', title='Value'),
+        color=alt.Color('category:N', 
+                       scale=alt.Scale(range=['#6c757d', '#868e96', '#adb5bd', '#ced4da', '#dee2e6']),
+                       legend=None),
+        tooltip=['category:N', 'value:Q']
+    ).properties(
+        width=300,
+        height=300,
+        title=f'Bar Chart {plot_id}'
+    ).configure_axis(
+        gridColor='#e9ecef',
+        gridOpacity=0.5,
+        gridWidth=0.5
+    ).configure_view(
+        strokeWidth=0
+    )
+    
+    return chart
+
+
+def generate_page_html(state, layout_config, all_states):
+    """
+    Generate HTML content for a single state page with multiple plots.
+    
+    Args:
+        state: Two-letter state code
+        layout_config: Resolved layout configuration for this state  
+        all_states: List of all state codes for navigation
         
     Returns:
         HTML string
     """
+    state_name = STATE_NAMES[state]
+    chart_type = layout_config['chart_type']
+    num_plots = layout_config['num_plots']
+    
     # Create list to store chart specs
     chart_specs = []
     
     # Generate plots
     for i in range(num_plots):
-        plot_id = (page_num - 1) * num_plots + i + 1
-        chart = create_random_scatter_plot(plot_id)
+        plot_id = hash(state + str(i)) % 10000  # State-specific plot IDs
+        
+        if chart_type == 'bar_chart':
+            chart = create_random_bar_chart(plot_id)
+        else:  # default to scatter_plot
+            chart = create_random_scatter_plot(plot_id)
+        
         # Get the Vega-Lite specification as a dictionary
         spec = chart.to_dict()
         chart_specs.append({
@@ -87,7 +191,7 @@ def generate_page_html(page_num, num_plots=300, num_pages=50):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Altair Gallery - Page {page_num}</title>
+    <title>{state_name} - Altair Gallery</title>
     <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
@@ -159,10 +263,16 @@ def generate_page_html(page_num, num_plots=300, num_pages=50):
 <body>
     <div class="container">
         <div class="header">
-            <h1>Altair Gallery - Page {page_num}</h1>
+            <h1>{state_name} ({state}) - Chart Type: {chart_type.replace('_', ' ').title()}</h1>
             <div class="nav">
                 <a href="index.html">Home</a>
-                {''.join([f'<a href="page{i}.html">Page {i}</a>' for i in range(1, num_pages + 1)])}
+"""
+    
+    # Add navigation to all states
+    for nav_state in all_states:
+        html_template += f'                <a href="{nav_state.lower()}.html">{nav_state}</a>\n'
+    
+    html_template += """
             </div>
         </div>
         
@@ -206,18 +316,19 @@ def generate_page_html(page_num, num_plots=300, num_pages=50):
     return html_template
 
 
-def generate_index_html(num_pages=50, plots_per_page=300):
+def generate_index_html(layout_config, all_states):
     """
     Generate the index/home page with navigation.
     
     Args:
-        num_pages: Total number of gallery pages
-        plots_per_page: Number of plots per page
+        layout_config: Loaded YAML configuration
+        all_states: List of all state codes
     
     Returns:
         HTML string
     """
-    total_plots = num_pages * plots_per_page
+    total_plots = len(all_states) * layout_config['defaults']['num_plots']
+    plots_per_page = layout_config['defaults']['num_plots']
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -328,18 +439,19 @@ def generate_index_html(num_pages=50, plots_per_page=300):
     <div class="container">
         <h1>Altair Gallery</h1>
         <div class="description">
-            <p>A performance testing gallery showcasing interactive Altair plots.</p>
-            <p>Each page contains {plots_per_page} randomly generated scatter plots with interactive features including zoom, pan, and tooltips.</p>
+            <p>A performance testing gallery showcasing interactive Altair plots by US state.</p>
+            <p>Each state contains {plots_per_page} randomly generated plots with interactive features including zoom, pan, and tooltips.</p>
+            <p>States marked with ★ use bar charts instead of the default scatter plots.</p>
         </div>
         
         <div class="stats">
             <div class="stat-box">
-                <div class="stat-number">{num_pages}</div>
-                <div class="stat-label">Pages</div>
+                <div class="stat-number">{len(all_states)}</div>
+                <div class="stat-label">States</div>
             </div>
             <div class="stat-box">
                 <div class="stat-number">{plots_per_page}</div>
-                <div class="stat-label">Plots per Page</div>
+                <div class="stat-label">Plots per State</div>
             </div>
             <div class="stat-box">
                 <div class="stat-number">{total_plots}</div>
@@ -347,13 +459,16 @@ def generate_index_html(num_pages=50, plots_per_page=300):
             </div>
         </div>
         
-        <h2>Select a Page</h2>
+        <h2>Select a State</h2>
         <div class="page-grid">
 """
     
-    # Add links to all pages
-    for i in range(1, num_pages + 1):
-        html += f'            <a href="page{i}.html" class="page-link">Page {i}</a>\n'
+    # Add links to all states
+    states_with_overrides = set(layout_config.get('overrides', {}).keys())
+    for state in all_states:
+        state_name = STATE_NAMES[state]
+        star = " ★" if state in states_with_overrides else ""
+        html += f'            <a href="{state}.html" class="page-link">{state_name}{star}</a>\n'
     
     html += """        </div>
         
@@ -368,72 +483,72 @@ def generate_index_html(num_pages=50, plots_per_page=300):
     return html
 
 
-def main(num_pages=50, plots_per_page=300):
+def main(config_file='layout_config.yaml'):
     """
-    Main function to generate all HTML pages.
+    Main function to generate all HTML pages using YAML configuration.
     
     Args:
-        num_pages: Number of gallery pages to generate (default: 10)
-        plots_per_page: Number of plots per page (default: 50)
+        config_file: Path to YAML configuration file (default: 'layout_config.yaml')
     """
+    # Load configuration
+    layout_config = load_layout_config(config_file)
+    
     # Create output directory if it doesn't exist
     output_dir = 'docs'
     os.makedirs(output_dir, exist_ok=True)
     
     print("Generating Altair Gallery website...")
     print(f"Output directory: {output_dir}")
-    print(f"Pages: {num_pages}")
-    print(f"Plots per page: {plots_per_page}")
+    print(f"Configuration: {config_file}")
+    print(f"States: {len(US_STATES)}")
+    print(f"Plots per state: {layout_config['defaults']['num_plots']}")
     
     # Generate index page
     print("\nGenerating index page...")
-    index_html = generate_index_html(num_pages, plots_per_page)
+    index_html = generate_index_html(layout_config, US_STATES)
     with open(os.path.join(output_dir, 'index.html'), 'w') as f:
         f.write(index_html)
     print("✓ index.html created")
     
-    # Generate individual pages
-    for page_num in range(1, num_pages + 1):
-        print(f"\nGenerating page {page_num}...")
-        page_html = generate_page_html(page_num, plots_per_page, num_pages)
-        filename = os.path.join(output_dir, f'page{page_num}.html')
+    # Generate individual state pages
+    for state in US_STATES:
+        print(f"\nGenerating {state} ({STATE_NAMES[state]})...")
+        state_layout = resolve_layout(layout_config, state)
+        page_html = generate_page_html(state, state_layout, US_STATES)
+        filename = os.path.join(output_dir, f'{state}.html')
         with open(filename, 'w') as f:
             f.write(page_html)
-        print(f"✓ page{page_num}.html created with {plots_per_page} plots")
+        chart_type = state_layout['chart_type']
+        num_plots = state_layout['num_plots']
+        print(f"✓ {state}.html created with {num_plots} {chart_type} plots")
     
-    total_plots = num_pages * plots_per_page
+    total_plots = len(US_STATES) * layout_config['defaults']['num_plots']
+    states_with_overrides = list(layout_config.get('overrides', {}).keys())
     print("\n" + "="*50)
     print("Gallery generation complete!")
-    print(f"Total pages created: {num_pages + 1} (1 index + {num_pages} gallery pages)")
+    print(f"Total pages created: {len(US_STATES) + 1} (1 index + {len(US_STATES)} state pages)")
     print(f"Total plots created: {total_plots}")
+    print(f"States with custom layouts: {', '.join(states_with_overrides) if states_with_overrides else 'None'}")
     print(f"Files are in the '{output_dir}/' directory")
     print("="*50)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Generate a performance-testing Altair gallery website.',
+        description='Generate a state-based Altair gallery website using YAML configuration.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        '--num-pages',
-        type=int,
-        default=50,
-        help='Number of gallery pages to generate'
-    )
-    parser.add_argument(
-        '--plots-per-page',
-        type=int,
-        default=300,
-        help='Number of plots per page'
+        '--config',
+        type=str,
+        default='layout_config.yaml',
+        help='Path to YAML configuration file'
     )
     
     args = parser.parse_args()
     
     # Validate arguments
-    if args.num_pages < 1:
-        parser.error("--num-pages must be at least 1")
-    if args.plots_per_page < 1:
-        parser.error("--plots-per-page must be at least 1")
+    if not os.path.exists(args.config):
+        parser.error(f"Configuration file '{args.config}' not found")
     
-    main(args.num_pages, args.plots_per_page)
+    main(args.config)

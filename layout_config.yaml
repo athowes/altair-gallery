@@ -1,0 +1,17 @@
+# Simple layout configuration manifest
+# Most states use scatter plots, a few use bar charts
+
+defaults:
+  chart_type: "scatter_plot"
+  num_plots: 300
+
+overrides:
+  # A few states use bar charts instead
+  CA:
+    chart_type: "bar_chart"
+  
+  TX:
+    chart_type: "bar_chart"
+  
+  NY:
+    chart_type: "bar_chart"
