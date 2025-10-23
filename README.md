@@ -4,8 +4,8 @@ A performance-testing website featuring interactive Altair plots. Built to test 
 
 ## Features
 
-- 🎨 **Customizable Pages**: Configure the number of pages (default: 10)
-- 📊 **Customizable Plots**: Set plots per page (default: 50, total: 500)
+- 🎨 **Customizable Pages**: Configure the number of pages (default: 50)
+- 📊 **Customizable Plots**: Set plots per page (default: 300, total: 15,000)
 - 🚀 **Performance Optimized**: Uses Vega-Lite JSON specs for efficient rendering
 - 🔍 **Interactive**: Zoom, pan, and tooltips on all visualizations
 - 🌐 **GitHub Pages**: Automatically deployed via GitHub Actions
@@ -45,7 +45,7 @@ uv sync
 uv run python generate_gallery.py
 ```
 
-This will create all HTML files in the `docs/` directory with the default settings (10 pages, 50 plots per page).
+This will create all HTML files in the `docs/` directory with the default settings (50 pages, 300 plots per page).
 
 #### Customization Options
 
@@ -63,8 +63,8 @@ uv run python generate_gallery.py --help
 ```
 
 Parameters:
-- `--num-pages`: Number of gallery pages to generate (default: 10)
-- `--plots-per-page`: Number of plots per page (default: 50)
+- `--num-pages`: Number of gallery pages to generate (default: 50)
+- `--plots-per-page`: Number of plots per page (default: 300)
 
 ### Local Preview
 
@@ -88,9 +88,9 @@ python -m http.server 8000 --directory docs
 ├── uv.lock              # Lock file for reproducible installs
 ├── docs/                 # Generated HTML files (served by GitHub Pages)
 │   ├── index.html       # Landing page with navigation
-│   ├── page1.html       # Page 1 with 50 plots
-│   ├── page2.html       # Page 2 with 50 plots
-│   └── ...              # Pages 3-10
+│   ├── page1.html       # Page 1 with 300 plots
+│   ├── page2.html       # Page 2 with 300 plots
+│   └── ...              # Pages 3-50
 └── .github/
     └── workflows/
         └── deploy.yml   # GitHub Actions workflow for deployment
@@ -128,7 +128,7 @@ The site automatically deploys to GitHub Pages via GitHub Actions when changes a
 To test the gallery:
 
 1. Generate the files: `uv run python generate_gallery.py`
-2. Verify all 11 HTML files are created in `docs/`
+2. Verify all 51 HTML files are created in `docs/`
 3. Open `docs/index.html` in a browser
 4. Navigate through pages and test interactivity (zoom, pan, tooltips)
 
