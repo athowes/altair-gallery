@@ -1,15 +1,15 @@
 # Altair Gallery
 
-A performance-testing website featuring interactive Altair plots. Built to test the performance and load times of a large Altair visualization gallery deployed via GitHub Pages.
+A performance-testing website featuring interactive Altair plots organized by US state. Built to test the performance and load times of a large Altair visualization gallery deployed via GitHub Pages.
 
 ## Features
 
-- 🎨 **Customizable Pages**: Configure the number of pages (default: 50)
-- 📊 **Customizable Plots**: Set plots per page (default: 300, total: 15,000)
+- 🗺️ **State-Based Gallery**: One page per US state (50 states total)
+- 📊 **15,000 Interactive Plots**: 300 plots per state with zoom, pan, and tooltips
 - 🚀 **Performance Optimized**: Uses Vega-Lite JSON specs for efficient rendering
 - 🔍 **Interactive**: Zoom, pan, and tooltips on all visualizations
 - 🌐 **GitHub Pages**: Automatically deployed via GitHub Actions
-- ⚙️ **Flexible Configuration**: Command-line parameters for easy customization
+- ⚙️ **Flexible Configuration**: YAML-based configuration for customizing chart types and plot counts per state
 
 ## Quick Start
 
@@ -45,26 +45,40 @@ uv sync
 uv run python generate_gallery.py
 ```
 
-This will create all HTML files in the `docs/` directory with the default settings (50 pages, 300 plots per page).
+This will create all HTML files in the `docs/` directory using the default configuration from `layout_config.yaml` (50 state pages with 300 plots each).
 
 #### Customization Options
 
-You can customize the number of pages and plots per page using command-line arguments:
+You can customize the gallery by modifying `layout_config.yaml` or by specifying a different configuration file:
 
 ```bash
-# Generate 5 pages with 25 plots each
-uv run python generate_gallery.py --num-pages 5 --plots-per-page 25
+# Use default configuration
+uv run python generate_gallery.py
 
-# Generate 3 pages with 10 plots each
-uv run python generate_gallery.py --num-pages 3 --plots-per-page 10
+# Use a custom configuration file
+uv run python generate_gallery.py --config my_config.yaml
 
 # View available options
 uv run python generate_gallery.py --help
 ```
 
-Parameters:
-- `--num-pages`: Number of gallery pages to generate (default: 50)
-- `--plots-per-page`: Number of plots per page (default: 300)
+The YAML configuration file allows you to:
+- Set default chart type (scatter_plot or bar_chart) for all states
+- Set default number of plots per state
+- Override chart types for specific states (e.g., CA, TX, NY use bar charts in the default config)
+
+Example `layout_config.yaml`:
+```yaml
+defaults:
+  chart_type: "scatter_plot"
+  num_plots: 300
+
+overrides:
+  CA:
+    chart_type: "bar_chart"
+  TX:
+    chart_type: "bar_chart"
+```
 
 ### Local Preview
 
@@ -84,13 +98,15 @@ python -m http.server 8000 --directory docs
 ```
 .
 ├── generate_gallery.py   # Main script to generate the gallery
+├── layout_config.yaml    # YAML configuration for chart types and plot counts
 ├── pyproject.toml        # Project configuration and dependencies
 ├── uv.lock              # Lock file for reproducible installs
 ├── docs/                 # Generated HTML files (served by GitHub Pages)
-│   ├── index.html       # Landing page with navigation
-│   ├── page1.html       # Page 1 with 300 plots
-│   ├── page2.html       # Page 2 with 300 plots
-│   └── ...              # Pages 3-50
+│   ├── index.html       # Landing page with navigation to all states
+│   ├── AL.html          # Alabama page with 300 plots
+│   ├── AK.html          # Alaska page with 300 plots
+│   ├── CA.html          # California page with 300 bar charts
+│   └── ...              # Pages for all 50 US states
 └── .github/
     └── workflows/
         └── deploy.yml   # GitHub Actions workflow for deployment
@@ -98,11 +114,12 @@ python -m http.server 8000 --directory docs
 
 ## How It Works
 
-1. **Random Data Generation**: Each plot generates 100 random points with 4 categories
-2. **Altair Visualization**: Creates interactive scatter plots using Altair
-3. **Vega-Lite Specs**: Plots are embedded as JSON specifications for efficiency
-4. **Client-Side Rendering**: Vega-Embed renders plots in the browser
-5. **GitHub Pages**: Automatically deployed on push to main branch
+1. **State-Based Organization**: Creates one page per US state (50 total)
+2. **Random Data Generation**: Each plot generates random data with reproducible seeds based on state and plot ID
+3. **Altair Visualization**: Creates interactive scatter plots or bar charts using Altair based on YAML configuration
+4. **Vega-Lite Specs**: Plots are embedded as JSON specifications for efficiency
+5. **Client-Side Rendering**: Vega-Embed renders plots in the browser
+6. **GitHub Pages**: Automatically deployed on push to main branch
 
 ## Performance Considerations
 
@@ -128,9 +145,10 @@ The site automatically deploys to GitHub Pages via GitHub Actions when changes a
 To test the gallery:
 
 1. Generate the files: `uv run python generate_gallery.py`
-2. Verify all 51 HTML files are created in `docs/`
+2. Verify all 51 HTML files are created in `docs/` (1 index + 50 state pages)
 3. Open `docs/index.html` in a browser
-4. Navigate through pages and test interactivity (zoom, pan, tooltips)
+4. Navigate through state pages and test interactivity (zoom, pan, tooltips)
+5. Verify that CA, TX, and NY show bar charts while other states show scatter plots (with default config)
 
 ## License
 
