@@ -325,11 +325,14 @@ def generate_page_html(state, layout_config, all_states):
         }}
         .nav {{
             margin: 20px 0 0 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }}
         .nav a {{
             color: #6c757d;
             text-decoration: none;
-            margin-right: 20px;
             padding: 8px 16px;
             font-size: 0.9375rem;
             font-weight: 500;
@@ -337,6 +340,24 @@ def generate_page_html(state, layout_config, all_states):
         }}
         .nav a:hover {{
             color: #212529;
+        }}
+        .nav select {{
+            padding: 8px 12px;
+            font-size: 0.9375rem;
+            font-family: inherit;
+            color: #495057;
+            background-color: #ffffff;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }}
+        .nav select:hover {{
+            border-color: #adb5bd;
+        }}
+        .nav select:focus {{
+            outline: none;
+            border-color: #6c757d;
         }}
         .gallery {{
             display: grid;
@@ -365,13 +386,17 @@ def generate_page_html(state, layout_config, all_states):
             <h1>{state_name} ({state}) - Chart Type: {chart_type.replace('_', ' ').title()}</h1>
             <div class="nav">
                 <a href="index.html">Home</a>
+                <select onchange="if(this.value) window.location.href=this.value;">
+                    <option value="">Go to state...</option>
 """
     
-    # Add navigation to all states
+    # Add dropdown options for all states
     for nav_state in all_states:
-        html_template += f'                <a href="{nav_state}.html">{nav_state}</a>\n'
+        nav_state_name = STATE_NAMES[nav_state]
+        selected = ' selected' if nav_state == state else ''
+        html_template += f'                    <option value="{nav_state}.html"{selected}>{nav_state_name}</option>\n'
     
-    html_template += """
+    html_template += """                </select>
             </div>
         </div>
         
@@ -512,28 +537,29 @@ def generate_index_html(layout_config, all_states):
             text-align: center;
             letter-spacing: -0.25px;
         }}
-        .page-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }}
-        .page-link {{
-            display: block;
-            padding: 24px;
-            background-color: #ffffff;
-            color: #495057;
-            text-decoration: none;
-            border: 1px solid #dee2e6;
+        .state-selector {{
+            max-width: 400px;
+            margin: 30px auto;
             text-align: center;
-            font-weight: 500;
-            font-size: 0.9375rem;
-            transition: all 0.2s;
         }}
-        .page-link:hover {{
-            background-color: #f8f9fa;
+        .state-selector select {{
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1rem;
+            font-family: inherit;
+            color: #495057;
+            background-color: #ffffff;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }}
+        .state-selector select:hover {{
             border-color: #adb5bd;
-            color: #212529;
+        }}
+        .state-selector select:focus {{
+            outline: none;
+            border-color: #6c757d;
         }}
         .footer {{
             margin-top: 60px;
@@ -570,17 +596,20 @@ def generate_index_html(layout_config, all_states):
         </div>
         
         <h2>Select a State</h2>
-        <div class="page-grid">
+        <div class="state-selector">
+            <select id="stateSelect" onchange="if(this.value) window.location.href=this.value;">
+                <option value="">Choose a state...</option>
 """
     
-    # Add links to all states
+    # Add dropdown options for all states
     states_with_overrides = set(layout_config.get('overrides', {}).keys())
     for state in all_states:
         state_name = STATE_NAMES[state]
         star = " ★" if state in states_with_overrides else ""
-        html += f'            <a href="{state}.html" class="page-link">{state_name}{star}</a>\n'
+        html += f'                <option value="{state}.html">{state_name}{star}</option>\n'
     
-    html += """        </div>
+    html += """            </select>
+        </div>
         
         <div class="footer">
             <p>Built with Altair and Vega-Lite</p>
