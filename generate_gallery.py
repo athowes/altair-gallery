@@ -10,6 +10,7 @@ import yaml
 import altair as alt
 import pandas as pd
 import numpy as np
+from plots import create_plot
 
 
 # US States data
@@ -162,91 +163,8 @@ def resolve_layout(manifest, state):
     return config
 
 
-def create_random_scatter_plot(plot_id, num_points=100):
-    """
-    Create an Altair scatter plot with random data.
-    
-    Args:
-        plot_id: Unique identifier for the plot
-        num_points: Number of random points to generate
-        
-    Returns:
-        Altair Chart object
-    """
-    # Set seed for reproducibility based on plot_id
-    np.random.seed(plot_id)
-    
-    # Generate random data
-    data = pd.DataFrame({
-        'x': np.random.randn(num_points),
-        'y': np.random.randn(num_points),
-        'category': np.random.choice(['A', 'B', 'C', 'D'], num_points)
-    })
-    
-    # Create interactive scatter plot with neutral theme
-    chart = alt.Chart(data).mark_circle(size=60).encode(
-        x=alt.X('x:Q', scale=alt.Scale(domain=[-4, 4])),
-        y=alt.Y('y:Q', scale=alt.Scale(domain=[-4, 4])),
-        color=alt.Color('category:N', 
-                       scale=alt.Scale(range=['#6c757d', '#868e96', '#adb5bd', '#ced4da']),
-                       legend=alt.Legend(title='Category')),
-        tooltip=['x:Q', 'y:Q', 'category:N']
-    ).properties(
-        width=300,
-        height=300,
-        title=f'Plot {plot_id}'
-    ).configure_axis(
-        gridColor='#e9ecef',
-        gridOpacity=0.5,
-        gridWidth=0.5
-    ).configure_view(
-        strokeWidth=0
-    ).interactive()
-    
-    return chart
-
-
-def create_random_bar_chart(plot_id):
-    """
-    Create an Altair bar chart with random data.
-    
-    Args:
-        plot_id: Unique identifier for the plot
-        
-    Returns:
-        Altair Chart object
-    """
-    # Set seed for reproducibility based on plot_id
-    np.random.seed(plot_id)
-    
-    # Generate random data
-    categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
-    data = pd.DataFrame({
-        'category': categories,
-        'value': np.random.randint(10, 100, len(categories))
-    })
-    
-    # Create bar chart with neutral theme
-    chart = alt.Chart(data).mark_bar().encode(
-        x=alt.X('category:N', title='Category'),
-        y=alt.Y('value:Q', title='Value'),
-        color=alt.Color('category:N', 
-                       scale=alt.Scale(range=['#6c757d', '#868e96', '#adb5bd', '#ced4da', '#dee2e6']),
-                       legend=None),
-        tooltip=['category:N', 'value:Q']
-    ).properties(
-        width=300,
-        height=300,
-        title=f'Bar Chart {plot_id}'
-    ).configure_axis(
-        gridColor='#e9ecef',
-        gridOpacity=0.5,
-        gridWidth=0.5
-    ).configure_view(
-        strokeWidth=0
-    )
-    
-    return chart
+# Plot creation functions are now in the plots/ module
+# See plots/scatter_plot.py and plots/bar_chart.py
 
 
 def generate_page_html(state, layout_config, all_states):
@@ -268,19 +186,21 @@ def generate_page_html(state, layout_config, all_states):
     # Create list to store chart specs
     chart_specs = []
     
-    # Generate plots
+    # Generate plots using modular plot system
     for i in range(num_plots):
-        plot_id = hash(state + str(i)) % 10000  # State-specific plot IDs
+        seed = hash(state + str(i)) % 10000  # State-specific seed for reproducibility
         
-        if chart_type == 'bar_chart':
-            chart = create_random_bar_chart(plot_id)
-        else:  # default to scatter_plot
-            chart = create_random_scatter_plot(plot_id)
+        # Use the appropriate plot module based on chart_type
+        chart = create_plot(chart_type, seed=seed)
+        
+        if chart is None:
+            # Fallback to scatter_plot if chart_type is not found
+            chart = create_plot('scatter_plot', seed=seed)
         
         # Get the Vega-Lite specification as a dictionary
         spec = chart.to_dict()
         chart_specs.append({
-            'id': f'vis-{plot_id}',
+            'id': f'vis-{seed}',
             'spec': spec
         })
     

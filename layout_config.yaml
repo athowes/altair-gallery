@@ -1,12 +1,12 @@
 # Simple layout configuration manifest
-# Most states use scatter plots, a few use bar charts
+# Most states use scatter plots, a few use different chart types
 
 defaults:
   chart_type: "scatter_plot"
   num_plots: 300
 
 overrides:
-  # A few states use bar charts instead
+  # States with different chart types
   CA:
     chart_type: "bar_chart"
   
@@ -15,3 +15,9 @@ overrides:
   
   NY:
     chart_type: "bar_chart"
+  
+  FL:
+    chart_type: "line_chart"
+  
+  IL:
+    chart_type: "heatmap"
