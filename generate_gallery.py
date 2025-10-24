@@ -34,6 +34,105 @@ STATE_NAMES = {
     'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 }
 
+LAZY_LOADER_JS = """(function(global) {
+    function load(config) {
+        if (!config || !Array.isArray(config.specs)) {
+            console.warn('AltairLazyLoader: missing chart specifications.');
+            return;
+        }
+        if (typeof global.vegaEmbed !== 'function') {
+            console.error('AltairLazyLoader: vegaEmbed is not available on the page.');
+            return;
+        }
+
+        const embedOptions = config.embedOptions || {};
+        const maxConcurrent = typeof config.maxConcurrent === 'number' && config.maxConcurrent > 0 ? config.maxConcurrent : 6;
+        const rootMargin = typeof config.rootMargin === 'string' ? config.rootMargin : '200px 0px';
+
+        const renderQueue = [];
+        let activeRenders = 0;
+        let drainScheduled = false;
+
+        const specsById = new Map(config.specs.map(function(info) {
+            return [info.id, info];
+        }));
+
+        function scheduleDrain() {
+            if (drainScheduled) {
+                return;
+            }
+            drainScheduled = true;
+            const runner = function() {
+                drainScheduled = false;
+                drainQueue();
+            };
+            if ('requestIdleCallback' in global) {
+                global.requestIdleCallback(runner, { timeout: 200 });
+            } else {
+                global.setTimeout(runner, 0);
+            }
+        }
+
+        function drainQueue() {
+            while (activeRenders < maxConcurrent && renderQueue.length > 0) {
+                const chartInfo = renderQueue.shift();
+                activeRenders += 1;
+
+                global.vegaEmbed('#' + chartInfo.id, chartInfo.spec, embedOptions)
+                    .catch(function(error) {
+                        console.error('AltairLazyLoader: failed to render chart ' + chartInfo.id, error);
+                        const el = global.document.getElementById(chartInfo.id);
+                        if (el) {
+                            el.innerHTML = '<pre style="color:#c92a2a;font-family:monospace;">Failed to render chart</pre>';
+                        }
+                    })
+                    .finally(function() {
+                        activeRenders -= 1;
+                        scheduleDrain();
+                    });
+            }
+        }
+
+        function queueRender(chartInfo) {
+            renderQueue.push(chartInfo);
+            scheduleDrain();
+        }
+
+        if ('IntersectionObserver' in global) {
+            const observer = new global.IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        observer.unobserve(entry.target);
+                        if (!entry.target.dataset.rendered) {
+                            entry.target.dataset.rendered = 'true';
+                            const info = specsById.get(entry.target.id);
+                            if (info) {
+                                queueRender(info);
+                            }
+                        }
+                    }
+                });
+            }, { rootMargin: rootMargin });
+
+            config.specs.forEach(function(info) {
+                const el = global.document.getElementById(info.id);
+                if (el) {
+                    observer.observe(el);
+                }
+            });
+        } else {
+            config.specs.forEach(function(info) {
+                queueRender(info);
+            });
+        }
+    }
+
+    global.AltairLazyLoader = {
+        load: load
+    };
+}(window));
+"""
+
 
 def load_layout_config(config_path='layout_config.yaml'):
     """Load the YAML layout configuration."""
@@ -297,17 +396,28 @@ def generate_page_html(state, layout_config, all_states):
     html_template += f"        const chartSpecs = {json.dumps(chart_specs, indent=8)};\n"
     
     html_template += """        
-        // Render all charts
-        chartSpecs.forEach(function(chartInfo) {
-            vegaEmbed('#' + chartInfo.id, chartInfo.spec, {
+    </script>
+    <script src="assets/lazy-loader.js"></script>
+    <script type="text/javascript">
+        const loaderConfig = {
+            specs: chartSpecs,
+            embedOptions: {
                 actions: {
                     export: true,
                     source: false,
                     compiled: false,
                     editor: false
                 }
-            });
-        });
+            },
+            maxConcurrent: 6,
+            rootMargin: '200px 0px'
+        };
+        
+        if (window.AltairLazyLoader && typeof window.AltairLazyLoader.load === 'function') {
+            window.AltairLazyLoader.load(loaderConfig);
+        } else {
+            console.error('AltairLazyLoader is not available.');
+        }
     </script>
 </body>
 </html>
@@ -483,6 +593,16 @@ def generate_index_html(layout_config, all_states):
     return html
 
 
+def write_lazy_loader_script(output_dir):
+    """Write the shared lazy loading script into the docs/assets directory."""
+    assets_dir = os.path.join(output_dir, 'assets')
+    os.makedirs(assets_dir, exist_ok=True)
+    script_path = os.path.join(assets_dir, 'lazy-loader.js')
+    with open(script_path, 'w') as f:
+        f.write(LAZY_LOADER_JS)
+    return script_path
+
+
 def main(config_file='layout_config.yaml'):
     """
     Main function to generate all HTML pages using YAML configuration.
@@ -496,12 +616,14 @@ def main(config_file='layout_config.yaml'):
     # Create output directory if it doesn't exist
     output_dir = 'docs'
     os.makedirs(output_dir, exist_ok=True)
+    script_path = write_lazy_loader_script(output_dir)
     
     print("Generating Altair Gallery website...")
     print(f"Output directory: {output_dir}")
     print(f"Configuration: {config_file}")
     print(f"States: {len(US_STATES)}")
     print(f"Plots per state: {layout_config['defaults']['num_plots']}")
+    print(f"Shared assets: {os.path.relpath(script_path, output_dir)}")
     
     # Generate index page
     print("\nGenerating index page...")
