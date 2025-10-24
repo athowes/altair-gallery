@@ -53,13 +53,19 @@ Configure via `layout_config.yaml` to set default chart types, plot counts, and 
 
 ```yaml
 defaults:
-  chart_type: "scatter_plot"  # or "bar_chart"
+  chart_type: "scatter_plot"  # Default chart type (any plot module ID)
   num_plots: 300
 
 overrides:
   CA:
-    chart_type: "bar_chart"  # Override for specific states
+    chart_type: "bar_chart"    # Use bar charts for California
+  FL:
+    chart_type: "line_chart"   # Use line charts for Florida
+  IL:
+    chart_type: "heatmap"      # Use heatmaps for Illinois
 ```
+
+Available chart types: `scatter_plot`, `bar_chart`, `line_chart`, `heatmap` (see `plots/` directory for all modules)
 
 ### Local Preview
 
@@ -79,6 +85,14 @@ open docs/index.html
 ├── generate_gallery.py   # Main script
 ├── layout_config.yaml    # Configuration file
 ├── pyproject.toml        # Dependencies
+├── plots/                # Modular plot definitions
+│   ├── __init__.py       # Plot registry and loader
+│   ├── README.md         # Plot module documentation
+│   ├── scatter_plot.py   # Scatter plot module
+│   ├── bar_chart.py      # Bar chart module
+│   ├── line_chart.py     # Line chart module
+│   ├── heatmap.py        # Heatmap module
+│   └── ...               # Additional plot modules
 ├── docs/                 # Generated site (index + 50 state pages)
 │   ├── assets/
 │   │   └── lazy-loader.js # Shared lazy loading script
@@ -89,11 +103,36 @@ open docs/index.html
 
 ## How It Works
 
-1. `layout_config.yaml` defines default chart settings plus state-specific overrides.
-2. `generate_gallery.py` builds reproducible random datasets and serializes each Altair chart to Vega-Lite JSON.
-3. The generator writes static HTML for every state and the home page, alongside `docs/assets/lazy-loader.js`.
-4. In the browser, `lazy-loader.js` watches each plot container with `IntersectionObserver`, queueing renders through Vega-Embed with a capped level of concurrency to keep the UI responsive.
-5. GitHub Pages serves the generated files directly—no runtime backend required.
+1. **Modular Plots**: Each visualization type is defined in its own module in the `plots/` directory. Each module exports metadata and a `create_chart()` function.
+2. **Configuration**: `layout_config.yaml` defines default chart settings plus state-specific overrides, referencing plot modules by ID.
+3. **Generation**: `generate_gallery.py` discovers available plot modules, builds reproducible random datasets, and serializes each Altair chart to Vega-Lite JSON.
+4. **Static Output**: The generator writes static HTML for every state and the home page, alongside `docs/assets/lazy-loader.js`.
+5. **Lazy Loading**: In the browser, `lazy-loader.js` watches each plot container with `IntersectionObserver`, queueing renders through Vega-Embed with a capped level of concurrency to keep the UI responsive.
+6. **Deployment**: GitHub Pages serves the generated files directly—no runtime backend required.
+
+## Adding New Plot Types
+
+To add a new visualization type:
+
+1. Create a new module in `plots/` (see `plots/README.md` for details)
+2. Define `METADATA` with a unique ID and `create_chart()` function
+3. Reference the new plot type in `layout_config.yaml`
+4. Run `generate_gallery.py` to rebuild the site
+
+Example:
+```python
+# plots/my_custom_plot.py
+METADATA = {
+    'id': 'my_custom_plot',
+    'title': 'My Custom Visualization',
+    'tags': ['custom'],
+    'estimated_render_time': 0.10
+}
+
+def create_chart(seed, **kwargs):
+    # Your implementation
+    return chart
+```
 
 ## Deployment
 

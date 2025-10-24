@@ -24,6 +24,7 @@ Thumbs.db
 
 # Temporary files
 tmp/
+test_config.yaml
 
 # Generated docs (created by generate_gallery.py, deployed via GitHub Actions)
 docs/
