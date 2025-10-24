@@ -5,8 +5,8 @@ A performance-testing website featuring interactive Altair plots organized by US
 ## Features
 
 - 🗺️ **State-Based Gallery**: 50 US states, each with 300 interactive plots (15,000 total)
-- 🚀 **Performance Optimized**: Vega-Lite JSON specs with client-side rendering
-- ⚙️ **Flexible Configuration**: YAML-based configuration for chart types and plot counts
+- 🚀 **Performance Optimized**: Static Vega-Lite specs, CDN-hosted Vega libraries, and lazy rendering via `lazy-loader.js`
+- ⚙️ **Flexible Configuration**: YAML-based defaults and per-state overrides for chart type and plot count
 - 🌐 **Auto-Deployed**: GitHub Actions deployment to GitHub Pages
 
 ## Quick Start
@@ -47,6 +47,8 @@ uv run python generate_gallery.py
 uv run python generate_gallery.py --config my_config.yaml
 ```
 
+This command writes the HTML pages into `docs/` and emits a shared lazy-loading helper at `docs/assets/lazy-loader.js`.
+
 Configure via `layout_config.yaml` to set default chart types, plot counts, and state-specific overrides:
 
 ```yaml
@@ -63,7 +65,7 @@ overrides:
 
 ```bash
 # Using Python HTTP server
-python -m http.server 8000 --directory docs
+python3 -m http.server 8000 --directory docs
 # Visit http://localhost:8000
 
 # Or open directly (macOS)
@@ -77,13 +79,21 @@ open docs/index.html
 ├── generate_gallery.py   # Main script
 ├── layout_config.yaml    # Configuration file
 ├── pyproject.toml        # Dependencies
-├── docs/                 # Generated HTML (51 files: index + 50 states)
+├── docs/                 # Generated site (index + 50 state pages)
+│   ├── assets/
+│   │   └── lazy-loader.js # Shared lazy loading script
+│   ├── index.html
+│   └── *.html            # One page per state
 └── .github/workflows/    # GitHub Actions deployment
 ```
 
 ## How It Works
 
-The script generates one HTML page per US state (50 total) with 300 plots each. Each plot uses reproducible random data and is rendered client-side via Vega-Embed. Static HTML files with embedded Vega-Lite JSON specs ensure fast loading and efficient rendering.
+1. `layout_config.yaml` defines default chart settings plus state-specific overrides.
+2. `generate_gallery.py` builds reproducible random datasets and serializes each Altair chart to Vega-Lite JSON.
+3. The generator writes static HTML for every state and the home page, alongside `docs/assets/lazy-loader.js`.
+4. In the browser, `lazy-loader.js` watches each plot container with `IntersectionObserver`, queueing renders through Vega-Embed with a capped level of concurrency to keep the UI responsive.
+5. GitHub Pages serves the generated files directly—no runtime backend required.
 
 ## Deployment
 
@@ -96,6 +106,7 @@ Automatically deploys to GitHub Pages via GitHub Actions on push to main:
 
 ```bash
 uv run python generate_gallery.py
+# Verify docs/assets/lazy-loader.js exists
 # Verify 51 HTML files in docs/ (index + 50 states)
 # Open docs/index.html and test interactivity
 ```
