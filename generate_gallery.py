@@ -497,7 +497,7 @@ def generate_index_html(layout_config, all_states):
         <div class="description">
             <p>A performance testing gallery showcasing interactive Altair plots by US state.</p>
             <p>Each state contains {plots_per_page} randomly generated plots with interactive features including zoom, pan, and tooltips.</p>
-            <p>States marked with ★ use bar charts instead of the default scatter plots.</p>
+            <p>Different states showcase various visualization types including scatter plots, bar charts, line charts, and heatmaps.</p>
         </div>
         
         <div class="stats">
@@ -522,11 +522,22 @@ def generate_index_html(layout_config, all_states):
 """
     
     # Add dropdown options for all states
-    states_with_overrides = set(layout_config.get('overrides', {}).keys())
+    default_chart_type = layout_config['defaults']['chart_type']
     for state in all_states:
         state_name = STATE_NAMES[state]
-        star = " ★" if state in states_with_overrides else ""
-        html += f'                <option value="{state}.html">{state_name}{star}</option>\n'
+        # Get the chart type for this state (from overrides or defaults)
+        state_layout = resolve_layout(layout_config, state)
+        chart_type = state_layout['chart_type']
+        
+        # Add chart type indicator if different from default
+        if chart_type != default_chart_type:
+            # Format chart type nicely (e.g., "bar_chart" -> "Bar Chart")
+            chart_label = chart_type.replace('_', ' ').title()
+            suffix = f" ({chart_label})"
+        else:
+            suffix = ""
+        
+        html += f'                <option value="{state}.html">{state_name}{suffix}</option>\n'
     
     html += """            </select>
         </div>
