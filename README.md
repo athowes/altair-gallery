@@ -110,6 +110,16 @@ open docs/index.html
 5. **Lazy Loading**: In the browser, `lazy-loader.js` watches each plot container with `IntersectionObserver`, queueing renders through Vega-Embed with a capped level of concurrency to keep the UI responsive.
 6. **Deployment**: GitHub Pages serves the generated files directly—no runtime backend required.
 
+## Modular Architecture
+
+Each visualization is now a self-contained Python module in the `plots/` directory. This makes the codebase:
+- **Isolated**: Each plot is independent and reusable
+- **Extensible**: Add new plot types without touching existing code
+- **Testable**: Test each visualization independently
+- **Discoverable**: Automatic plot registry via module discovery
+
+See **[MODULARITY.md](MODULARITY.md)** for detailed architecture documentation.
+
 ## Adding New Plot Types
 
 To add a new visualization type:
@@ -133,6 +143,8 @@ def create_chart(seed, **kwargs):
     # Your implementation
     return chart
 ```
+
+Try it yourself: `python example_usage.py`
 
 ## Deployment
 
