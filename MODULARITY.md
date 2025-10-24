@@ -271,7 +271,7 @@ That's it! Your new plot type is now integrated.
 2. **Follow Size Standards**: Use 300x300 as base dimensions
 3. **Maintain Theme Consistency**: Use neutral colors (#6c757d family)
 4. **Add Interactivity**: Include tooltips where appropriate
-5. **Document Parameters**: Clearly describe all **kwargs
+5. **Document Parameters**: Clearly describe all `**kwargs`
 6. **Keep It Simple**: One visualization concept per module
 7. **Test Independently**: Ensure module works standalone
 
